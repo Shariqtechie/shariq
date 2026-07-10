@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>shariq</title>
+<style>
+  :root {
+    --bg: #000000;
+    --panel: #060606;
+    --text: #EDEDED;
+    --dim: #6E6E6E;
+    --amber: #E8A33D;
+    --blue: #5B8DBE;
+    --line: #1A1A1A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, Menlo, monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 6vh 6vw 4rem;
+    line-height: 1.6;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  .term {
+    width: 100%;
+    max-width: 820px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.02), 0 40px 100px -40px rgba(232,163,61,0.06);
+    overflow: hidden;
+  }
+
+  .term-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; opacity: 0.85; }
+  .dot.r { background: #E86A5C; }
+  .dot.y { background: #E8C15C; }
+  .dot.g { background: #6BC48A; }
+
+  .term-title {
+    margin-left: auto;
+    font-size: 0.72rem;
+    color: var(--dim);
+    letter-spacing: 0.04em;
+  }
+
+  .term-body {
+    padding: 1.8rem 1.6rem 2.2rem;
+    font-size: 0.95rem;
+  }
+
+  .prompt { color: var(--dim); }
+  .prompt .path { color: var(--blue); }
+  .prompt .sym { color: var(--amber); }
+
+  .line { white-space: pre-wrap; word-break: break-word; }
+
+  .cursor {
+    display: inline-block;
+    width: 8px;
+    height: 1.05em;
+    background: var(--amber);
+    vertical-align: text-bottom;
+    animation: blink 1s steps(1) infinite;
+    margin-left: 2px;
+  }
+
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .out {
+    color: var(--text);
+    opacity: 0;
+    animation: fadeIn 0.4s ease forwards;
+  }
+
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  .headline {
+    font-size: 1.6rem;
+    color: var(--amber);
+    letter-spacing: -0.01em;
+    margin: 0.2rem 0 0.1rem;
+  }
+
+  .sub {
+    color: var(--dim);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 0.4rem;
+  }
+
+  .links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--text);
+    text-decoration: none;
+    border: 1px solid var(--line);
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    transition: border-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
+  }
+
+  .links a svg {
+    width: 16px;
+    height: 16px;
+    fill: currentColor;
+  }
+
+  .links a:hover, .links a:focus-visible {
+    border-color: var(--amber);
+    color: var(--amber);
+    transform: translateY(-1px);
+  }
+
+  .stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.3rem;
+  }
+
+  .chip {
+    font-size: 0.76rem;
+    color: var(--blue);
+    background: rgba(91,141,190,0.08);
+    border: 1px solid rgba(91,141,190,0.25);
+    padding: 0.2rem 0.55rem;
+    border-radius: 5px;
+  }
+
+  .projects {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+    margin-top: 0.3rem;
+  }
+
+  @media (min-width: 520px) {
+    .projects { grid-template-columns: 1fr 1fr; }
+  }
+
+  .project {
+    position: relative;
+    display: block;
+    text-decoration: none;
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.85rem 0.9rem;
+    overflow: hidden;
+    transition: border-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .project::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(160px circle at var(--mx, 50%) var(--my, 50%), rgba(232,163,61,0.10), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+
+  .project:hover, .project:focus-visible {
+    border-color: var(--amber);
+    transform: translateY(-2px);
+  }
+
+  .project:hover::before, .project:focus-visible::before {
+    opacity: 1;
+  }
+
+  .project .p-name {
+    font-size: 0.9rem;
+    color: var(--amber);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .project .p-name svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+    flex-shrink: 0;
+  }
+
+  .project .p-desc {
+    font-size: 0.76rem;
+    color: var(--dim);
+    margin-top: 0.25rem;
+  }
+
+  .project .p-link {
+    font-size: 0.7rem;
+    color: var(--blue);
+    margin-top: 0.4rem;
+    display: block;
+    word-break: break-all;
+  }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+  <div class="term">
+    <div class="term-bar">
+      <span class="dot r"></span>
+      <span class="dot y"></span>
+      <span class="dot g"></span>
+      <span class="term-title">shariq@is-a.dev</span>
+    </div>
+    <div class="term-body" id="termBody"></div>
+  </div>
+
+<script>
+(function () {
+  const body = document.getElementById('termBody');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function makePromptLine(cmd) {
+    const line = document.createElement('div');
+    line.className = 'line prompt';
+    line.innerHTML = `<span class="path">~</span> <span class="sym">$</span> `;
+    body.appendChild(line);
+    return line;
+  }
+
+  function typeInto(el, text, speed, done) {
+    if (reduced) {
+      el.innerHTML += text;
+      if (done) done();
+      return;
+    }
+    let i = 0;
+    const span = document.createElement('span');
+    el.appendChild(span);
+    const timer = setInterval(() => {
+      span.textContent += text[i];
+      i++;
+      if (i >= text.length) {
+        clearInterval(timer);
+        if (done) done();
+      }
+    }, speed);
+  }
+
+  function appendOutput(html, cb) {
+    const out = document.createElement('div');
+    out.className = 'out';
+    out.innerHTML = html;
+    body.appendChild(out);
+    if (cb) requestAnimationFrame(cb);
+  }
+
+  const cursor = document.createElement('span');
+  cursor.className = 'cursor';
+
+  const steps = [
+    {
+      cmd: 'whoami',
+      output: `<div class="headline">shariq</div><div class="sub">building things, one commit at a time.</div>`
+    },
+    {
+      cmd: 'cat stack.txt',
+      output: `<div class="stack">
+        <span class="chip">JavaScript</span>
+        <span class="chip">Python</span>
+        <span class="chip">React</span>
+        <span class="chip">Node</span>
+      </div>`
+    },
+    {
+      cmd: 'ls links/',
+      output: `<div class="links">
+        <a href="https://github.com/Shariqtechie" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+          <span>Shariqtechie</span>
+        </a>
+        <a href="https://t.me/shariqji" target="_blank" rel="noopener">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M15.36 1.46 13.1 14.4c-.17.79-.62.98-1.25.61l-3.46-2.55-1.67 1.6c-.18.19-.34.34-.7.34l.25-3.53 6.43-5.8c.28-.25-.06-.39-.43-.14L4.6 9.28 1.2 8.21c-.74-.23-.75-.74.16-1.1L14.29.36c.62-.23 1.16.15.97 1.1z"/></svg>
+          <span>shariqji</span>
+        </a>
+      </div>`
+    },
+    {
+      cmd: 'ls projects/',
+      output: `<div class="projects">
+        <a class="project" href="https://linkflick.pages.dev/" target="_blank" rel="noopener">
+          <div class="p-name">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.72 9.28a1 1 0 0 1 0-1.41l2.5-2.5a1 1 0 1 1 1.41 1.41L7.41 8l1.22 1.22a1 1 0 1 1-1.41 1.41l-2.5-2.5zm6.56-2.56a1 1 0 0 1 0 1.41l-2.5 2.5a1 1 0 1 1-1.41-1.41L8.59 8 7.37 6.78a1 1 0 1 1 1.41-1.41l2.5 2.5z"/></svg>
+            linkflick
+          </div>
+          <div class="p-desc">Live web app</div>
+          <span class="p-link">linkflick.pages.dev</span>
+        </a>
+        <a class="project" href="https://pptx-tools.pages.dev/" target="_blank" rel="noopener">
+          <div class="p-name">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.72 9.28a1 1 0 0 1 0-1.41l2.5-2.5a1 1 0 1 1 1.41 1.41L7.41 8l1.22 1.22a1 1 0 1 1-1.41 1.41l-2.5-2.5zm6.56-2.56a1 1 0 0 1 0 1.41l-2.5 2.5a1 1 0 1 1-1.41-1.41L8.59 8 7.37 6.78a1 1 0 1 1 1.41-1.41l2.5 2.5z"/></svg>
+            pptx-tools
+          </div>
+          <div class="p-desc">Live web app</div>
+          <span class="p-link">pptx-tools.pages.dev</span>
+        </a>
+        <a class="project" href="https://github.com/Shariqtechie/pause-windows-updates" target="_blank" rel="noopener">
+          <div class="p-name">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+            pause-windows-updates
+          </div>
+          <div class="p-desc">GitHub repo</div>
+          <span class="p-link">github.com/Shariqtechie/pause-windows-updates</span>
+        </a>
+        <a class="project" href="https://github.com/Shariqtechie/delhi-metro" target="_blank" rel="noopener">
+          <div class="p-name">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+            delhi-metro
+          </div>
+          <div class="p-desc">GitHub repo</div>
+          <span class="p-link">github.com/Shariqtechie/delhi-metro</span>
+        </a>
+      </div>`
+    }
+  ];
+
+  let stepIndex = 0;
+
+  function runStep() {
+    if (stepIndex >= steps.length) {
+      const finalLine = makePromptLine();
+      finalLine.appendChild(cursor);
+      attachGlow();
+      return;
+    }
+    const step = steps[stepIndex];
+    const line = makePromptLine();
+    typeInto(line, step.cmd, reduced ? 0 : 38, () => {
+      setTimeout(() => {
+        appendOutput(step.output, () => {
+          stepIndex++;
+          setTimeout(runStep, reduced ? 0 : 260);
+        });
+      }, reduced ? 0 : 150);
+    });
+  }
+
+  function attachGlow() {
+    document.querySelectorAll('.project').forEach((card) => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        card.style.setProperty('--mx', `${e.clientX - rect.left}px`);
+        card.style.setProperty('--my', `${e.clientY - rect.top}px`);
+      });
+    });
+  }
+
+  runStep();
+})();
+</script>
+
+</body>
+</html>
